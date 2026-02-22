@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Покупка товара</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --card: #1a1a24;
+    --border: rgba(255,255,255,0.07);
+    --gold: #f5c842;
+    --gold-dim: rgba(245,200,66,0.12);
+    --text: #f0f0f8;
+    --muted: #6b6b80;
+    --green: #3ddc84;
+    --green-dim: rgba(61,220,132,0.1);
+    --red: #ff4d6d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(245,200,66,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(100,80,200,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 100px;
+  }
+
+  /* Header */
+  .header {
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.5s ease;
+  }
+
+  .header-logo {
+    width: 36px;
+    height: 36px;
+    background: var(--gold);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: #000;
+  }
+
+  .header-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Hero section */
+  .hero {
+    margin: 24px 20px 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .product-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--gold-dim);
+    border: 1px solid rgba(245,200,66,0.2);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .product-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  .product-name {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .product-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .meta-row .icon {
+    width: 30px;
+    height: 30px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .meta-row .value {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Price block */
+  .price-block {
+    margin: 16px 20px 0;
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+
+  .price-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px 24px;
+  }
+
+  .price-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .price-main {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+
+  .price-main span {
+    font-size: 16px;
+    font-weight: 600;
+    opacity: 0.7;
+  }
+
+  .price-conversions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .conv-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+
+  .conv-flag {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .conv-amount {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+  }
+
+  .conv-currency {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* Safety block */
+  .safety-block {
+    margin: 16px 20px 0;
+    background: var(--green-dim);
+    border: 1px solid rgba(61,220,132,0.15);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeUp 0.5s ease 0.3s both;
+  }
+
+  .safety-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .safety-text {
+    font-size: 13px;
+    color: var(--green);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .safety-text strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  /* Contact form */
+  .contact-block {
+    margin: 16px 20px 0;
+    animation: fadeUp 0.5s ease 0.35s both;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  input, textarea {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 14px 14px 42px;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  textarea {
+    padding-top: 14px;
+    padding-left: 42px;
+    resize: none;
+    height: 90px;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--muted);
+  }
+
+  input:focus, textarea:focus {
+    border-color: rgba(245,200,66,0.4);
+  }
+
+  /* Bottom button */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px;
+    background: linear-gradient(to top, var(--bg) 70%, transparent);
+    z-index: 100;
+    animation: slideUp 0.5s ease 0.4s both;
+  }
+
+  .btn-buy {
+    width: 100%;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 16px;
+    padding: 18px 24px;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+    box-shadow: 0 4px 30px rgba(245,200,66,0.3);
+    -webkit-appearance: none;
+  }
+
+  .btn-buy:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 15px rgba(245,200,66,0.2);
+  }
+
+  .btn-buy:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Success screen */
+  .success-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .success-screen.show {
+    display: flex;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--green-dim);
+    border: 2px solid var(--green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 24px;
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .success-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+
+  .success-text {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 280px;
+  }
+
+  /* Animations */
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="header-logo">T</div>
+    <div class="header-title">TRECCC Marketplace</div>
+  </div>
+
+  <div class="hero">
+    <div class="product-badge">В продаже</div>
+    <div class="product-name" id="productName">Загрузка...</div>
+    <div class="product-meta">
+      <div class="meta-row">
+        <div class="icon">📍</div>
+        <span>Локация: <span class="value" id="productCountry">—</span></span>
+      </div>
+      <div class="meta-row">
+        <div class="icon">🚛</div>
+        <span>Доставка: <span class="value" id="productDelivery">—</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="price-block">
+    <div class="price-card">
+      <div class="price-label">Стоимость</div>
+      <div class="price-main" id="priceMain">— <span>USDT</span></div>
+      <div class="price-conversions">
+        <div class="conv-item">
+          <span class="conv-flag">🇷🇺</span>
+          <span class="conv-amount" id="priceRUB">—</span>
+          <span class="conv-currency">₽</span>
+        </div>
+        <div class="conv-item">
+          <span class="conv-flag">🇰🇿</span>
+          <span class="conv-amount" id="priceKZT">—</span>
+          <span class="conv-currency">₸</span>
+        </div>
+        <div class="conv-item">
+          <span class="conv-flag">🇧🇾</span>
+          <span class="conv-amount" id="priceBYN">—</span>
+          <span class="conv-currency">Br</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="safety-block">
+    <div class="safety-icon">🛡️</div>
+    <div class="safety-text">
+      <strong>Безопасная сделка</strong>
+      Ваши данные защищены. Свяжитесь с продавцом напрямую через Telegram.
+    </div>
+  </div>
+
+  <div class="contact-block">
+    <div class="section-title">Ваши контакты</div>
+    <div class="input-group">
+      <div class="input-wrap">
+        <span class="input-icon">👤</span>
+        <input type="text" id="inputName" placeholder="Ваше имя" maxlength="50" />
+      </div>
+      <div class="input-wrap">
+        <span class="input-icon">📱</span>
+        <input type="tel" id="inputPhone" placeholder="Номер телефона" maxlength="20" />
+      </div>
+      <div class="input-wrap">
+        <span class="input-icon">💬</span>
+        <textarea id="inputMessage" placeholder="Комментарий к заказу (необязательно)"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="btn-buy" id="buyBtn" onclick="submitOrder()">
+    🛒 СВЯЗАТЬСЯ С ПРОДАВЦОМ
+  </button>
+</div>
+
+<!-- Success Screen -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Заявка отправлена!</div>
+  <div class="success-text">Продавец получил ваши данные и скоро свяжется с вами в Telegram</div>
+</div>
+
+<script>
+  // Инициализация Telegram Web App
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+  tg.setHeaderColor('#0a0a0f');
+  tg.setBackgroundColor('#0a0a0f');
+
+  // Курсы валют
+  const rates = { RUB: 92.5, KZT: 455.0, BYN: 3.25 };
+
+  // Получаем параметры из URL
+  const params = new URLSearchParams(window.location.search);
+  const sellerId = params.get('seller_id') || '';
+  const productName = params.get('name') || 'Товар';
+  const productPrice = parseInt(params.get('price')) || 0;
+  const productCountry = params.get('country') || '—';
+  const productDelivery = params.get('delivery') || '—';
+
+  // Заполняем данные на странице
+  document.getElementById('productName').textContent = productName.toUpperCase();
+  document.getElementById('productCountry').textContent = productCountry;
+  document.getElementById('productDelivery').textContent = productDelivery;
+  document.getElementById('priceMain').innerHTML = `${productPrice} <span>USDT</span>`;
+  document.getElementById('priceRUB').textContent = Math.round(productPrice * rates.RUB).toLocaleString('ru');
+  document.getElementById('priceKZT').textContent = Math.round(productPrice * rates.KZT).toLocaleString('ru');
+  document.getElementById('priceBYN').textContent = (productPrice * rates.BYN).toFixed(1);
+
+  // Автозаполнение имени из Telegram
+  if (tg.initDataUnsafe?.user) {
+    const user = tg.initDataUnsafe.user;
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+    if (fullName) document.getElementById('inputName').value = fullName;
+  }
+
+  // Кнопка покупки
+  function submitOrder() {
+    const name = document.getElementById('inputName').value.trim();
+    const phone = document.getElementById('inputPhone').value.trim();
+    const message = document.getElementById('inputMessage').value.trim();
+
+    if (!name) {
+      tg.showAlert('Пожалуйста, введите ваше имя');
+      document.getElementById('inputName').focus();
+      return;
+    }
+    if (!phone) {
+      tg.showAlert('Пожалуйста, введите номер телефона');
+      document.getElementById('inputPhone').focus();
+      return;
+    }
+
+    const btn = document.getElementById('buyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Отправляем...';
+
+    // Отправляем данные боту
+    const orderData = {
+      seller_id: sellerId,
+      product_name: productName,
+      price: productPrice,
+      buyer_name: name,
+      buyer_phone: phone,
+      comment: message
+    };
+
+    tg.sendData(JSON.stringify(orderData));
+
+    // Показываем экран успеха
+    setTimeout(() => {
+      document.getElementById('successScreen').classList.add('show');
+      setTimeout(() => tg.close(), 2000);
+    }, 300);
+  }
+</script>
+
+</body>
+</html>
